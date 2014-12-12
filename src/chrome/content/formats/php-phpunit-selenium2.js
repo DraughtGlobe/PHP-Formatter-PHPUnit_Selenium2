@@ -330,7 +330,7 @@ this.options = {
     indent: "2",
     initialIndents: "2",
     defaultExtension: "php",
-    extendedClass: 'PHPUnit_Extensions_Selenium2TestCase',
+    extendedClass: 'AcceptanceTest',
 };
 
 this.configForm =
