@@ -363,21 +363,33 @@ WDAPI.Driver = function() {
     this.ref = options.receiver;
 };
 
-WDAPI.Driver.searchContext = function(locatorType, locator) {
+WDAPI.Driver.searchContext = function(locatorType, locator, more) {
     var locatorString = xlateArgument(locator);
     switch (locatorType) {
         case 'xpath':
-            return '$this->byXPath(' + locatorString + ')';
+            return more
+                ? '$this->elements($this->using("xpath")->value(' + locatorString + '))'
+                : '$this->byXPath(' + locatorString + ')';
         case 'css':
-            return '$this->byCssSelector(' + locatorString + ')';
+            return more
+                ? '$this->elements($this->using("css selector")->value(' + locatorString + '))'
+                : '$this->byCssSelector(' + locatorString + ')';
         case 'id':
-            return '$this->byId(' + locatorString + ')';
+            return more
+                ? '$this->elements($this->using("id")->value(' + locatorString + '))'
+                : '$this->byId(' + locatorString + ')';
         case 'link':
-            return '$this->byLinkText(' + locatorString + ')';
+            return more
+                ? '$this->elements($this->using("link text")->value(' + locatorString + '))'
+                : '$this->byLinkText(' + locatorString + ')';
         case 'name':
-            return '$this->byName(' + locatorString + ')';
+            return more
+                ? '$this->elements($this->using("name")->value(' + locatorString + '))'
+                : '$this->byName(' + locatorString + ')';
         case 'tag_name':
-            return '$this->by("tag name", ' + locatorString + ')';
+            return more
+                ? '$this->elements($this->using("tag name")->value(' + locatorString + '))'
+                : '$this->by("tag name", ' + locatorString + ')';
     }
     throw 'Error: unknown strategy [' + locatorType + '] for locator [' + locator + ']';
 };
@@ -391,11 +403,11 @@ WDAPI.Driver.prototype.close = function() {
 };
 
 WDAPI.Driver.prototype.findElement = function(locatorType, locator) {
-    return new WDAPI.Element(WDAPI.Driver.searchContext(locatorType, locator));
+    return new WDAPI.Element(WDAPI.Driver.searchContext(locatorType, locator, false));
 };
 
 WDAPI.Driver.prototype.findElements = function(locatorType, locator) {
-    return new WDAPI.ElementList(WDAPI.Driver.searchContext(locatorType, locator));
+    return new WDAPI.ElementList(WDAPI.Driver.searchContext(locatorType, locator, true));
 };
 
 WDAPI.Driver.prototype.getCurrentUrl = function() {
@@ -462,9 +474,14 @@ WDAPI.Element.prototype.isDisplayed = function() {
 WDAPI.Element.prototype.isSelected = function() {
     return this.ref + "->selected()";
 };
-
+/*
 WDAPI.Element.prototype.sendKeys = function(text) {
     return this.ref + "->keys(" + xlateArgument(text, 'args') + ")";
+};
+*/
+WDAPI.Element.prototype.sendKeys = function(text) {
+    //return "$this->keys(" + xlateArgument(text) + ")";
+    return this.ref + "->value(" + xlateArgument(text) + ")";
 };
 
 WDAPI.Element.prototype.submit = function() {
@@ -482,6 +499,10 @@ WDAPI.Element.prototype.select = function(selectLocator) {
     return "$this->select(" + this.ref + ")->selectOptionByLabel(" + xlateArgument(selectLocator.string) + ")";
 };
 
+WDAPI.Element.prototype.setValue = function(value) {
+    return this.ref + "->value(" + xlateArgument(value) + ")";
+};
+
 WDAPI.ElementList = function(ref) {
     this.ref = ref;
 };
@@ -491,11 +512,12 @@ WDAPI.ElementList.prototype.getItem = function(index) {
 };
 
 WDAPI.ElementList.prototype.getSize = function() {
-    return this.ref + ".size";
+    //return this.ref + "->size()";
+    return 'count(' + this.ref + ')';
 };
 
 WDAPI.ElementList.prototype.isEmpty = function() {
-    return this.ref + ".empty?";
+    return 'count(' + this.ref + ') == 0';
 };
 
 
